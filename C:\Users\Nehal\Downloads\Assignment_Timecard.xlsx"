@@ -1,0 +1,66 @@
+# employee_analyzer.py
+
+import datetime
+
+def read_file(file_path):
+    """
+    Read the input file and return the content.
+    """
+    with open(file_path, 'r') as file:
+        return file.readlines()
+
+def parse_date(date_str):
+    """
+    Parse date from the given string.
+    """
+    return datetime.datetime.strptime(date_str, '%Y-%m-%d')
+
+def analyze_employees(data):
+    """
+    Analyze employees based on the specified criteria.
+    """
+    consecutive_days = 7
+    time_between_shifts_min = 60  # 1 hour in minutes
+    time_between_shifts_max = 600  # 10 hours in minutes
+    max_hours_in_single_shift = 840  # 14 hours in minutes
+
+    employees = {}
+
+    for line in data:
+        # Assuming the file has a structure like "employee_name, position, date, hours_worked"
+        name, position, date_str, hours_worked_str = line.strip().split(', ')
+        date = parse_date(date_str)
+        hours_worked = int(hours_worked_str)
+
+        # Check for employees who have worked for 7 consecutive days
+        if name in employees:
+            if (date - employees[name]['last_date']).days == 1:
+                employees[name]['consecutive_days'] += 1
+            else:
+                employees[name]['consecutive_days'] = 1
+        else:
+            employees[name] = {'last_date': date, 'consecutive_days': 1}
+
+        # Check for employees with less than 10 hours between shifts but greater than 1 hour
+        if name in employees and (date - employees[name]['last_date']).total_seconds() / 60 < time_between_shifts_max:
+            if (date - employees[name]['last_date']).total_seconds() / 60 > time_between_shifts_min:
+                print(f"{name} has less than 10 hours but greater than 1 hour between shifts.")
+
+        # Check for employees who have worked for more than 14 hours in a single shift
+        if hours_worked > max_hours_in_single_shift:
+            print(f"{name} has worked for more than 14 hours on {date_str}.")
+
+        # Update the last worked date for the employee
+        employees[name]['last_date'] = date
+
+        # Print employees who have worked for 7 consecutive days
+        if employees[name]['consecutive_days'] == consecutive_days:
+            print(f"{name} has worked for 7 consecutive days.")
+
+def main():
+    file_path = '"C:\Users\Nehal\Downloads\Assignment_Timecard.xlsx"'
+    data = read_file(file_path)s
+    analyze_employees(data)
+
+if __name__ == "__main__":
+    main()
